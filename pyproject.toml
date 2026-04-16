@@ -7,7 +7,9 @@ authors = [
     { name = "T1nyTim", email = "t1nytim@example.com" }
 ]
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pyside6>=6.11.0",
+]
 
 [project.scripts]
 bookmark-manager = "bookmark_manager.app.main:main"
