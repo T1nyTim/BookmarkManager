@@ -1,9 +1,18 @@
 from dataclasses import dataclass
 
 
-@dataclass
-class Bookmark: ...
+@dataclass(slots=True)
+class Bookmark:
+    bookmark_id: int
+    url: str
+    display_name: str
+    display_name_normalized: str
+    initial_weight: int
+    times_copied: int
 
 
-@dataclass
-class Tag: ...
+@dataclass(slots=True)
+class Tag:
+    tag_id: int
+    name_display: str
+    name_normalized: str
