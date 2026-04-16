@@ -19,4 +19,4 @@ requires = ["uv_build>=0.8.3,<0.9.0"]
 build-backend = "uv_build"
 
 [tool.ruff.lint]
-ignore = ["D100", "D101", "D102", "D103", "D104", "D107"]
+ignore = ["D100", "D101", "D102", "D103", "D104", "D107", "TD002", "TD003"]
