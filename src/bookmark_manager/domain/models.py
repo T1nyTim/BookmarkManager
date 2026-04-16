@@ -1,4 +1,10 @@
 from dataclasses import dataclass
+from enum import IntEnum
+
+
+class Selection(IntEnum):
+    SELECTED = True
+    NOT_SELECTED = False
 
 
 @dataclass(slots=True)
