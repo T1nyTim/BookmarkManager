@@ -10,6 +10,15 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True)
+class EditableBookmark:
+    bookmark_id: int
+    url: str
+    display_name: str
+    tag_names: tuple[str, ...]
+    initial_weight: int
+
+
+@dataclass(slots=True)
 class SearchResult:
     bookmarks: tuple[Bookmark, ...]
     bookmark_id_to_tag_names: dict[int, tuple[str, ...]]
@@ -19,6 +28,19 @@ class SearchService:
     def __init__(self, bookmark_repo: BookmarkRepository, bookmark_tag_repo: BookmarkTagRepository) -> None:
         self._bookmark_repo = bookmark_repo
         self._bookmark_tag_repo = bookmark_tag_repo
+
+    def get_bookmark_for_edit(self, bookmark_id: int) -> EditableBookmark | None:
+        bookmark = self._bookmark_repo.get_by_id(bookmark_id)
+        if bookmark is None:
+            return None
+        tags = self._bookmark_tag_repo.get_tags_for_bookmark(bookmark_id)
+        return EditableBookmark(
+            bookmark.bookmark_id,
+            bookmark.url,
+            bookmark.display_name,
+            tuple(tag.name_display for tag in tags),
+            bookmark.initial_weight,
+        )
 
     def search(self, query: str) -> SearchResult:
         bookmarks = self._bookmark_repo.list_all()

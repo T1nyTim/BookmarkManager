@@ -1,4 +1,9 @@
-from enum import IntEnum
+from enum import Enum, IntEnum, auto
+
+
+class Mode(Enum):
+    EDIT = auto()
+    ADD = auto()
 
 
 class Selection(IntEnum):
