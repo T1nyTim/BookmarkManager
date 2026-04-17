@@ -13,3 +13,6 @@ wheels/
 *.python-version
 .ruff_cache
 
+# project files
+bookmarks.sqlite3
+
