@@ -47,9 +47,15 @@ class MainWindow(QMainWindow):
         self._on_search_changed(self._search_input.text())
 
     def _on_search_changed(self, text: str) -> None:
-        bookmarks = self._search_service.search(text)
+        search_result = self._search_service.search(text)
         self._clear_results()
-        state = SearchResultsState.from_domain(text, bookmarks, shorten_url, {}, self._selection_service.get_selected())
+        state = SearchResultsState.from_domain(
+            text,
+            search_result.bookmarks,
+            shorten_url,
+            search_result.bookmark_id_to_tag_names,
+            self._selection_service.get_selected(),
+        )
         for row_state in state.row_states:
             widget = BookmarkRowWidget(row_state)
             widget.clicked.connect(self._on_bookmark_clicked)
