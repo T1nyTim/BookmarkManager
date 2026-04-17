@@ -43,10 +43,10 @@ class BookmarkEditorDialog(QDialog):
         self._button_box.accepted.connect(self._on_accept_clicked)
         self._button_box.rejected.connect(self.reject)
         root_layout.addWidget(self._button_box)
-        self._url_input.selectAll()
-        self._url_input.setFocus()
         if state.mode == Mode.EDIT:
             self._url_input.setReadOnly(True)
+        self._url_input.selectAll()
+        self._url_input.setFocus()
 
     def display_name(self) -> str:
         return self._display_name_input.text().strip()
