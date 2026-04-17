@@ -2,7 +2,10 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QLineEdit, QMainWindow, QVBoxLayout, QWidget
 
+from bookmark_manager.ui.viewmodels.bookmark_row_state import BookmarkRowState
 from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
+from bookmark_manager.utils.models import Selection
+from bookmark_manager.utils.url_formatter import shorten_url
 
 if TYPE_CHECKING:
     from bookmark_manager.services.search import SearchService
@@ -47,9 +50,11 @@ class MainWindow(QMainWindow):
     def _on_search_changed(self, text: str) -> None:
         results = self._search_service.search(text)
         self._clear_results()
+        selected_id = self._selection_service.get_selected()
         for bookmark in results:
-            widget = BookmarkRowWidget(bookmark)
-            widget.set_selected(bookmark.bookmark_id == self._selection_service.get_selected())
+            is_selected = Selection.SELECTED if bookmark.bookmark_id == selected_id else Selection.NOT_SELECTED
+            state = BookmarkRowState.from_domain(bookmark, shorten_url, (), is_selected)
+            widget = BookmarkRowWidget(state)
             widget.clicked.connect(self._on_bookmark_clicked)
             self._results_layout.addWidget(widget)
             self._result_widgets[bookmark.bookmark_id] = widget
