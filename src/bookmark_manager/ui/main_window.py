@@ -2,9 +2,8 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QLineEdit, QMainWindow, QVBoxLayout, QWidget
 
-from bookmark_manager.ui.viewmodels.bookmark_row_state import BookmarkRowState
+from bookmark_manager.ui.viewmodels.search_results_state import SearchResultsState
 from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
-from bookmark_manager.utils.models import Selection
 from bookmark_manager.utils.url_formatter import shorten_url
 
 if TYPE_CHECKING:
@@ -45,21 +44,14 @@ class MainWindow(QMainWindow):
 
     def _on_bookmark_clicked(self, bookmark_id: int) -> None:
         self._selection_service.select(bookmark_id)
-        self._refresh_selection_state()
+        self._on_search_changed(self._search_input.text())
 
     def _on_search_changed(self, text: str) -> None:
-        results = self._search_service.search(text)
+        bookmarks = self._search_service.search(text)
         self._clear_results()
-        selected_id = self._selection_service.get_selected()
-        for bookmark in results:
-            is_selected = Selection.SELECTED if bookmark.bookmark_id == selected_id else Selection.NOT_SELECTED
-            state = BookmarkRowState.from_domain(bookmark, shorten_url, (), is_selected)
-            widget = BookmarkRowWidget(state)
+        state = SearchResultsState.from_domain(text, bookmarks, shorten_url, {}, self._selection_service.get_selected())
+        for row_state in state.row_states:
+            widget = BookmarkRowWidget(row_state)
             widget.clicked.connect(self._on_bookmark_clicked)
             self._results_layout.addWidget(widget)
-            self._result_widgets[bookmark.bookmark_id] = widget
-
-    def _refresh_selection_state(self) -> None:
-        selected_bookmark_id = self._selection_service.get_selected()
-        for bookmark_id, widget in self._result_widgets.items():
-            widget.set_selected(bookmark_id == selected_bookmark_id)
+            self._result_widgets[row_state.bookmark_id] = widget

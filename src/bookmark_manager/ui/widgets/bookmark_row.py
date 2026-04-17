@@ -18,7 +18,7 @@ class BookmarkRowWidget(QFrame):
     def __init__(self, state: BookmarkRowState) -> None:
         super().__init__()
         self._state = state
-        self._is_selected = False
+        self._is_selected = state.is_selected
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         root_layout = QVBoxLayout()

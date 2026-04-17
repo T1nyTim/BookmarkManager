@@ -18,5 +18,5 @@ class BookmarkRowState:
     is_selected: bool
 
     @classmethod
-    def from_domain(cls, bookmark: Bookmark, shorten_url: Callable, tag_names: tuple[str, ...], selected: Selection) -> BookmarkRowState:
+    def from_domain(cls, bookmark: Bookmark, shorten_url: Callable[[str], str], tag_names: tuple[str, ...], selected: Selection) -> BookmarkRowState:
         return cls(bookmark.bookmark_id, bookmark.display_name, bookmark.url, shorten_url(bookmark.url), tag_names, bool(selected))
