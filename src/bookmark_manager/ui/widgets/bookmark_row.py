@@ -71,6 +71,9 @@ class BookmarkRowWidget(QFrame):
             return
         super().mousePressEvent(event)
 
+    def url(self) -> str:
+        return self._state.url
+
     def _apply_selected_style(self) -> None:
         if self._is_selected:
             self.setStyleSheet("QFrame { background-color: palette(alternate-base); border: 1px solid palette(highlight); border-radius: 6px; }")
