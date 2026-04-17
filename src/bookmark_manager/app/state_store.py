@@ -32,6 +32,9 @@ class StateStore:
         self._state.is_showing_bookmark_editor = True
         self._state.editing_bookmark_id = bookmark_id
 
+    def selected_bookmark_id(self) -> int | None:
+        return self._state.selected_bookmark_id
+
     def set_search_text(self, query_text: str) -> None:
         self._state.search_text = query_text
 

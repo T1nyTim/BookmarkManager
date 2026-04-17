@@ -3,12 +3,11 @@ from typing import TYPE_CHECKING
 from bookmark_manager.app.intents import (
     RequestAddBookmark,
     RequestCancelBookmarkEditor,
+    RequestConfirmBookmarkEditor,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
     RequestSearchChanged,
-    RequestSubmitAddBookmark,
-    RequestSubmitEditBookmark,
     RequestToggleSelection,
 )
 
@@ -43,18 +42,14 @@ class AppDispatcher:
             self._state_store.toggle_selection(intent.bookmark_id)
         elif isinstance(intent, RequestAddBookmark):
             self._state_store.open_add_dialog()
-        elif isinstance(intent, RequestSubmitAddBookmark):
-            self._bookmark_service.add_bookmark(intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
-            self._state_store.close_dialog()
         elif isinstance(intent, RequestEditBookmark):
             self._state_store.open_edit_dialog(intent.bookmark_id)
-        elif isinstance(intent, RequestSubmitEditBookmark):
-            self._bookmark_service.edit_bookmark(intent.bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
-            self._state_store.close_dialog()
-        elif isinstance(intent, RequestCopyBookmark):
-            self._clipboard_service.copy(intent.bookmark_id, intent.url)
         elif isinstance(intent, RequestCancelBookmarkEditor):
             self._state_store.close_dialog()
+        elif isinstance(intent, RequestConfirmBookmarkEditor):
+            self._handle_confirm_bookmark_editor(intent)
+        elif isinstance(intent, RequestCopyBookmark):
+            self._handle_copy_bookmark(intent.bookmark_id, intent.url)
         elif isinstance(intent, RequestCopySelectedBookmark):
             self._handle_copy_selected_bookmark()
         else:
@@ -71,6 +66,18 @@ class AppDispatcher:
                 self._state_store.close_dialog()
         search_result = self._search_service.search(state.search_text)
         return self._projection_builder.build_main_window(self._state_store.state, search_result, editable_bookmark)
+
+    def _handle_confirm_bookmark_editor(self, intent: RequestConfirmBookmarkEditor) -> None:
+        editing_bookmark_id = self._state_store.state.editing_bookmark_id
+        if editing_bookmark_id is None:
+            self._bookmark_service.add_bookmark(intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
+        else:
+            self._bookmark_service.edit_bookmark(editing_bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
+        self._state_store.close_dialog()
+
+    def _handle_copy_bookmark(self, bookmark_id: int, url: str) -> None:
+        self._clipboard_service.copy_text(url)
+        self._bookmark_service.copy_bookmark(bookmark_id)
 
     def _handle_copy_selected_bookmark(self) -> None:
         selected_bookmark_id = self._state_store.state.selected_bookmark_id

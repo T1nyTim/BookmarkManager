@@ -14,3 +14,7 @@ class ClipboardService:
         clipboard = QGuiApplication.clipboard()
         clipboard.setText(url)
         self._bookmark_service.copy_bookmark(bookmark_id)
+
+    def copy_text(self, text: str) -> None:
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(text)

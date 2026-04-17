@@ -7,12 +7,11 @@ from bookmark_manager.app.intents import (
     Intent,
     RequestAddBookmark,
     RequestCancelBookmarkEditor,
+    RequestConfirmBookmarkEditor,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
     RequestSearchChanged,
-    RequestSubmitAddBookmark,
-    RequestSubmitEditBookmark,
     RequestToggleSelection,
 )
 from bookmark_manager.ui.dialogs.bookmark_editor import BookmarkEditorDialog, BookmarkEditorState
@@ -107,10 +106,12 @@ class MainWindow(QMainWindow):
         self._dispatch_and_render(RequestEditBookmark(bookmark_id))
 
     def _on_edit_selected_requested(self) -> None:
-        selected_bookmark_id = self._selected_bookmark_id
+        projection = self._dispatcher.dispatch(RequestSearchChanged(self._search_input.text()))
+        selected_bookmark_id = projection.selected_bookmark_id
         if selected_bookmark_id is None:
+            self._render(projection)
             return
-        self._dispatch_and_render(RequestEditBookmark(selected_bookmark_id))
+        self._render(self._dispatcher.dispatch(RequestEditBookmark(selected_bookmark_id)))
 
     def _on_search_text_changed(self, text: str) -> None:
         self._dispatch_and_render(RequestSearchChanged(text))
@@ -126,13 +127,9 @@ class MainWindow(QMainWindow):
         if dialog.exec() != BookmarkEditorDialog.DialogCode.Accepted:
             self._dispatch_and_render(RequestCancelBookmarkEditor())
             return
-        if editor.bookmark_id is None:
-            self._dispatch_and_render(RequestSubmitAddBookmark(dialog.url(), dialog.display_name(), tuple(dialog.tags()), dialog.initial_weight()))
-            return
-        self._dispatch_and_render(RequestSubmitEditBookmark(editor.bookmark_id, dialog.display_name(), tuple(dialog.tags()), dialog.initial_weight()))
+        self._dispatch_and_render(RequestConfirmBookmarkEditor(dialog.url(), dialog.display_name(), tuple(dialog.tags()), dialog.initial_weight()))
 
     def _render(self, projection: MainWindowProjection) -> None:
-        self._selected_bookmark_id = projection.selected_bookmark_id
         self._copy_bookmark_action.setEnabled(projection.menu_state.can_copy)
         self._edit_bookmark_action.setEnabled(projection.menu_state.can_edit)
         self._clear_results()
