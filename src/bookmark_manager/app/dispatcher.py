@@ -74,8 +74,10 @@ class AppDispatcher:
 
     @_dispatch_intent.register
     def _(self, intent: RequestCopyBookmark) -> None:
-        self._services.clipboard.copy_text(intent.url)
-        self._services.bookmark.copy_bookmark(intent.bookmark_id)
+        bookmark = self._services.search.get_bookmark_for_edit(intent.bookmark_id)
+        if bookmark is None:
+            return
+        self._services.clipboard.copy(intent.bookmark_id, bookmark.url)
 
     @_dispatch_intent.register
     def _(self, _: RequestCopySelectedBookmark) -> None:

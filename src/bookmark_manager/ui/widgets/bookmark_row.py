@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 class BookmarkRowWidget(QFrame):
     clicked = Signal(int)
-    copy_requested = Signal(int, str)
+    copy_requested = Signal(int)
     edit_requested = Signal(int)
 
     def __init__(self, state: BookmarkRowState) -> None:

@@ -1,7 +1,8 @@
 from typing import TYPE_CHECKING
 
-from PySide6.QtGui import QAction, QKeySequence, QShortcut
-from PySide6.QtWidgets import QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtWidgets import QFrame, QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from bookmark_manager.app.intents import (
     Intent,
@@ -39,15 +40,16 @@ class MainWindow(QMainWindow):
         self._search_input.setPlaceholderText("Search...")
         self._search_input.textChanged.connect(self._on_search_text_changed)
         self._layout.addWidget(self._search_input)
-        self._results_container = QWidget()
+        self._results_container = QFrame()
+        self._results_container.setFrameShape(QFrame.Shape.StyledPanel)
         self._results_layout = QVBoxLayout()
+        self._results_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._results_container.setLayout(self._results_layout)
-        self._layout.addWidget(self._results_container)
+        self._layout.addWidget(self._results_container, 1)
         self._bookmark_editor_presenter = BookmarkEditorPresenter(self)
         self._bookmark_editor_presenter.intent_emitted.connect(self._dispatch_and_render)
         self._build_actions()
         self._build_menus()
-        self._build_shortcuts()
         self._render(self._dispatcher.dispatch(RequestSearchChanged(query_text="")))
 
     def _add_bookmark_row(self, row_state: BookmarkRowState) -> None:
@@ -60,7 +62,7 @@ class MainWindow(QMainWindow):
 
     def _build_actions(self) -> None:
         self._add_bookmark_action = QAction("Add URL", self)
-        self._add_bookmark_action.setShortcut(QKeySequence("Ctrl+A"))
+        self._add_bookmark_action.setShortcut(QKeySequence("Ctrl+N"))
         self._add_bookmark_action.triggered.connect(self._on_add_bookmark_requested)
         self._copy_bookmark_action = QAction("Copy URL", self)
         self._copy_bookmark_action.setShortcut(QKeySequence("Ctrl+C"))
@@ -79,10 +81,6 @@ class MainWindow(QMainWindow):
         edit_menu = menu_bar.addMenu("Edit")
         edit_menu.addAction(self._copy_bookmark_action)
         edit_menu.addAction(self._edit_bookmark_action)
-
-    def _build_shortcuts(self) -> None:
-        self._copy_shortcut = QShortcut(QKeySequence("Ctrl+C"), self)
-        self._copy_shortcut.activated.connect(self._on_copy_selected_requested)
 
     def _clear_results(self) -> None:
         self._result_widgets.clear()
