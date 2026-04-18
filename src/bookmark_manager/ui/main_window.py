@@ -108,8 +108,8 @@ class MainWindow(QMainWindow):
     def _on_bookmark_clicked(self, bookmark_id: int) -> None:
         self._dispatch_and_render(RequestToggleSelection(bookmark_id))
 
-    def _on_copy_bookmark_requested(self, bookmark_id: int, url: str) -> None:
-        self._dispatch_and_render(RequestCopyBookmark(bookmark_id, url))
+    def _on_copy_bookmark_requested(self, bookmark_id: int) -> None:
+        self._dispatch_and_render(RequestCopyBookmark(bookmark_id))
 
     def _on_copy_selected_requested(self) -> None:
         self._dispatch_and_render(RequestCopySelectedBookmark())

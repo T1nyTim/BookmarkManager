@@ -51,8 +51,13 @@ class BookmarkRowWidget(QFrame):
         self._populate_tags()
         self._apply_selected_style()
 
+    @property
     def bookmark_id(self) -> int:
         return self._state.bookmark_id
+
+    @property
+    def url(self) -> str:
+        return self._state.url
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:  # noqa: N802
         menu = QMenu(self)
@@ -71,9 +76,6 @@ class BookmarkRowWidget(QFrame):
             return
         super().mousePressEvent(event)
 
-    def url(self) -> str:
-        return self._state.url
-
     def _apply_selected_style(self) -> None:
         if self._is_selected:
             self.setStyleSheet("QFrame { background-color: palette(alternate-base); border: 1px solid palette(highlight); border-radius: 6px; }")
@@ -81,7 +83,7 @@ class BookmarkRowWidget(QFrame):
         self.setStyleSheet("QFrame { background-color: palette(base); border: 1px solid palette(mid); border-radius: 6px; }")
 
     def _on_copy_clicked(self) -> None:
-        self.copy_requested.emit(self._state.bookmark_id, self._state.url)
+        self.copy_requested.emit(self._state.bookmark_id)
 
     def _on_edit_clicked(self) -> None:
         self.edit_requested.emit(self._state.bookmark_id)

@@ -35,7 +35,6 @@ class RequestConfirmBookmarkEditor:
 @dataclass(slots=True, frozen=True)
 class RequestCopyBookmark:
     bookmark_id: int
-    url: str
 
 
 @dataclass(slots=True, frozen=True)
