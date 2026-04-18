@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QAction, QKeySequence, QShortcut
-from PySide6.QtWidgets import QLineEdit, QMainWindow, QMessageBox, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from bookmark_manager.app.intents import (
     Intent,
@@ -13,6 +13,7 @@ from bookmark_manager.app.intents import (
     RequestEditBookmark,
     RequestSearchChanged,
     RequestToggleSelection,
+    RequestToggleTagExpansion,
 )
 from bookmark_manager.ui.dialogs.bookmark_editor import BookmarkEditorDialog, BookmarkEditorState
 from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
@@ -20,6 +21,9 @@ from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
 if TYPE_CHECKING:
     from bookmark_manager.app.dispatcher import AppDispatcher
     from bookmark_manager.app.projections import MainWindowProjection
+    from bookmark_manager.ui.viewmodels.bookmark_row_state import BookmarkRowState
+    from bookmark_manager.ui.viewmodels.content_state import TagViewState
+    from bookmark_manager.ui.viewmodels.search_results_state import SearchResultsState
 
 
 class MainWindow(QMainWindow):
@@ -45,6 +49,14 @@ class MainWindow(QMainWindow):
         self._build_menus()
         self._build_shortcuts()
         self._render(self._dispatcher.dispatch(RequestSearchChanged(query_text="")))
+
+    def _add_bookmark_row(self, row_state: BookmarkRowState) -> None:
+        widget = BookmarkRowWidget(row_state)
+        widget.clicked.connect(self._on_bookmark_clicked)
+        widget.copy_requested.connect(self._on_copy_bookmark_requested)
+        widget.edit_requested.connect(self._on_edit_bookmark_requested)
+        self._results_layout.addWidget(widget)
+        self._result_widgets[row_state.bookmark_id] = widget
 
     def _build_actions(self) -> None:
         self._add_bookmark_action = QAction("Add URL", self)
@@ -116,6 +128,31 @@ class MainWindow(QMainWindow):
     def _on_search_text_changed(self, text: str) -> None:
         self._dispatch_and_render(RequestSearchChanged(text))
 
+    def _render(self, projection: MainWindowProjection) -> None:
+        self._copy_bookmark_action.setEnabled(projection.menu_state.can_copy)
+        self._edit_bookmark_action.setEnabled(projection.menu_state.can_edit)
+        self._clear_results()
+        content_state = projection.content_state
+        if content_state.search_results is not None:
+            self._render_search_results(content_state.search_results)
+        elif content_state.tag_view is not None:
+            self._render_tag_view(content_state.tag_view)
+        if projection.bookmark_editor is not None:
+            self._show_bookmark_editor(projection)
+
+    def _render_search_results(self, state: SearchResultsState) -> None:
+        for row_state in state.row_states:
+            self._add_bookmark_row(row_state)
+
+    def _render_tag_view(self, state: TagViewState) -> None:
+        for section in state.sections:
+            header = QPushButton(section.tag_name)
+            header.clicked.connect(lambda _checked=False, tag_id=section.tag_id: self._dispatch_and_render(RequestToggleTagExpansion(tag_id)))
+            self._results_layout.addWidget(header)
+            if section.is_expanded:
+                for row_state in section.row_states:
+                    self._add_bookmark_row(row_state)
+
     def _show_bookmark_editor(self, projection: MainWindowProjection) -> None:
         editor = projection.bookmark_editor
         if editor is None:
@@ -128,17 +165,3 @@ class MainWindow(QMainWindow):
             self._dispatch_and_render(RequestCancelBookmarkEditor())
             return
         self._dispatch_and_render(RequestConfirmBookmarkEditor(dialog.url(), dialog.display_name(), tuple(dialog.tags()), dialog.initial_weight()))
-
-    def _render(self, projection: MainWindowProjection) -> None:
-        self._copy_bookmark_action.setEnabled(projection.menu_state.can_copy)
-        self._edit_bookmark_action.setEnabled(projection.menu_state.can_edit)
-        self._clear_results()
-        for row_state in projection.search_results.row_states:
-            widget = BookmarkRowWidget(row_state)
-            widget.clicked.connect(self._on_bookmark_clicked)
-            widget.copy_requested.connect(self._on_copy_bookmark_requested)
-            widget.edit_requested.connect(self._on_edit_bookmark_requested)
-            self._results_layout.addWidget(widget)
-            self._result_widgets[row_state.bookmark_id] = widget
-        if projection.bookmark_editor is not None:
-            self._show_bookmark_editor(projection)

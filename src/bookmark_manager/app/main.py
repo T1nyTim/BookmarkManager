@@ -23,7 +23,7 @@ def main() -> None:
     bookmark_tag_repo = BookmarkTagRepository(connection)
     bookmark_service = BookmarkService(bookmark_repo, tag_repo, bookmark_tag_repo)
     search_service = SearchService(bookmark_repo, bookmark_tag_repo)
-    dispatcher = build_dispatcher(bookmark_service, search_service)
+    dispatcher = build_dispatcher(bookmark_service, search_service, tag_repo, bookmark_tag_repo, bookmark_repo)
     window = MainWindow(dispatcher)
     window.showMaximized()
     app.exec()

@@ -1,7 +1,7 @@
 from enum import Enum, IntEnum, auto
 
 
-class Mode(Enum):
+class EditorMode(Enum):
     EDIT = auto()
     ADD = auto()
 

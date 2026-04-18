@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from PySide6.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox, QSpinBox, QVBoxLayout, QWidget
 
-from bookmark_manager.utils.models import Mode
+from bookmark_manager.utils.models import EditorMode
 
 
 @dataclass(slots=True)
@@ -11,7 +11,7 @@ class BookmarkEditorState:
     display_name: str = ""
     tag_names: tuple[str, ...] = ()
     initial_weight: int = 0
-    mode: Mode = Mode.ADD
+    mode: EditorMode = EditorMode.ADD
 
 
 class BookmarkEditorDialog(QDialog):
@@ -20,7 +20,7 @@ class BookmarkEditorDialog(QDialog):
         if state is None:
             state = BookmarkEditorState()
         self._state = state
-        self.setWindowTitle("Edit URL" if state.mode == Mode.EDIT else "Add URL")
+        self.setWindowTitle("Edit URL" if state.mode == EditorMode.EDIT else "Add URL")
         self.setModal(True)
         root_layout = QVBoxLayout(self)
         form_layout = QFormLayout()
@@ -43,7 +43,7 @@ class BookmarkEditorDialog(QDialog):
         self._button_box.accepted.connect(self._on_accept_clicked)
         self._button_box.rejected.connect(self.reject)
         root_layout.addWidget(self._button_box)
-        if state.mode == Mode.EDIT:
+        if state.mode == EditorMode.EDIT:
             self._url_input.setReadOnly(True)
         self._url_input.selectAll()
         self._url_input.setFocus()

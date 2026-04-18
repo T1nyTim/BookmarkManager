@@ -9,6 +9,7 @@ type Intent = (
     | RequestEditBookmark
     | RequestSearchChanged
     | RequestToggleSelection
+    | RequestToggleTagExpansion
 )
 
 
@@ -54,3 +55,8 @@ class RequestSearchChanged:
 @dataclass(slots=True, frozen=True)
 class RequestToggleSelection:
     bookmark_id: int
+
+
+@dataclass(slots=True, frozen=True)
+class RequestToggleTagExpansion:
+    tag_id: int

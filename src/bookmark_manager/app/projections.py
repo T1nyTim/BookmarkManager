@@ -1,19 +1,24 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from bookmark_manager.ui.viewmodels.bookmark_row_state import BookmarkRowState
+from bookmark_manager.ui.viewmodels.content_state import ContentState, TagViewState
 from bookmark_manager.ui.viewmodels.search_results_state import SearchResultsState
-from bookmark_manager.utils.models import Mode
-from bookmark_manager.utils.url_formatter import shorten_url
+from bookmark_manager.ui.viewmodels.tag_section_state import TagSectionState
+from bookmark_manager.utils.models import EditorMode, Selection
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from bookmark_manager.app.state_store import AppState
+    from bookmark_manager.domain.models import Bookmark
     from bookmark_manager.services.search import EditableBookmark, SearchResult
+    from bookmark_manager.services.tag_view import TagSectionDomain
 
 
 @dataclass(slots=True, frozen=True)
 class BookmarkEditorProjection:
-    mode: Mode
-    bookmark_id: int | None
+    mode: EditorMode
     url: str
     display_name: str
     tag_names: tuple[str, ...]
@@ -22,10 +27,10 @@ class BookmarkEditorProjection:
 
 @dataclass(slots=True, frozen=True)
 class MainWindowProjection:
-    search_results: SearchResultsState
     menu_state: MenuStateProjection
-    selected_bookmark_id: int | None
+    content_state: ContentState
     bookmark_editor: BookmarkEditorProjection | None
+    selected_bookmark_id: int | None
 
 
 @dataclass(slots=True, frozen=True)
@@ -35,28 +40,80 @@ class MenuStateProjection:
 
 
 class ProjectionBuilder:
-    def build_main_window(self, state: AppState, search_result: SearchResult, editable_bookmark: EditableBookmark | None) -> MainWindowProjection:
-        selected_bookmark_id = state.selected_bookmark_id
-        search_results = SearchResultsState.from_domain(
-            state.search_text,
-            search_result.bookmarks,
-            shorten_url,
-            search_result.bookmark_id_to_tag_names,
-            selected_bookmark_id,
-        )
-        has_selection = selected_bookmark_id is not None
+    def __init__(self, shorten_url: Callable[[str], str]) -> None:
+        self._shorten_url = shorten_url
+
+    def build_main_window(
+        self,
+        state: AppState,
+        search_result: SearchResult,
+        editable_bookmark: EditableBookmark | None,
+        tag_sections: tuple[TagSectionDomain, ...],
+    ) -> MainWindowProjection:
+        has_selection = state.selected_bookmark_id is not None
         menu_state = MenuStateProjection(has_selection, has_selection)
-        bookmark_editor = None
-        if state.is_showing_bookmark_editor:
-            if editable_bookmark is None:
-                bookmark_editor = BookmarkEditorProjection(Mode.ADD, None, "", "", (), 0)
-            else:
-                bookmark_editor = BookmarkEditorProjection(
-                    Mode.EDIT,
-                    editable_bookmark.bookmark_id,
-                    editable_bookmark.url,
-                    editable_bookmark.display_name,
-                    editable_bookmark.tag_names,
-                    editable_bookmark.initial_weight,
-                )
-        return MainWindowProjection(search_results, menu_state, selected_bookmark_id, bookmark_editor)
+        content_state = self._build_content_state(state, search_result, tag_sections)
+        bookmark_editor = self._build_bookmark_editor(state, editable_bookmark)
+        return MainWindowProjection(menu_state, content_state, bookmark_editor, state.selected_bookmark_id)
+
+    def _build_bookmark_editor(self, state: AppState, editable_bookmark: EditableBookmark | None) -> BookmarkEditorProjection | None:
+        if state.is_add_dialog_open:
+            return BookmarkEditorProjection(EditorMode.ADD, "", "", (), 0)
+        if state.editing_bookmark_id is not None and editable_bookmark is not None:
+            return BookmarkEditorProjection(
+                EditorMode.EDIT,
+                editable_bookmark.url,
+                editable_bookmark.display_name,
+                editable_bookmark.tag_names,
+                editable_bookmark.initial_weight,
+            )
+        return None
+
+    def _build_content_state(self, state: AppState, search_result: SearchResult, tag_sections: tuple[TagSectionDomain, ...]) -> ContentState:
+        if state.search_text.strip():
+            return ContentState(
+                SearchResultsState.from_domain(
+                    state.search_text,
+                    search_result.bookmarks,
+                    self._shorten_url,
+                    search_result.bookmark_id_to_tag_names,
+                    state.selected_bookmark_id,
+                ),
+                None,
+            )
+        return ContentState(
+            None,
+            TagViewState(
+                tuple(
+                    TagSectionState(
+                        section.tag_id,
+                        section.tag_name,
+                        section.tag_id in state.expanded_tag_ids,
+                        tuple(
+                            search_result_row_from_bookmark(
+                                bookmark,
+                                self._shorten_url,
+                                search_result.bookmark_id_to_tag_names.get(bookmark.bookmark_id, ()),
+                                state.selected_bookmark_id,
+                            )
+                            for bookmark in section.bookmarks
+                        ),
+                    )
+                    for section in tag_sections
+                ),
+            ),
+        )
+
+
+def search_result_row_from_bookmark(
+    bookmark: Bookmark,
+    shorten_url: Callable[[str], str],
+    tag_names: tuple[str, ...],
+    selected_bookmark_id: int | None,
+) -> BookmarkRowState:
+    return BookmarkRowState.from_domain(
+        bookmark,
+        shorten_url,
+        tag_names,
+        Selection.SELECTED if bookmark.bookmark_id == selected_bookmark_id else Selection.NOT_SELECTED,
+    )
