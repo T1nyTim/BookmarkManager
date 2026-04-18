@@ -6,8 +6,6 @@ from PySide6.QtWidgets import QLineEdit, QMainWindow, QMessageBox, QPushButton, 
 from bookmark_manager.app.intents import (
     Intent,
     RequestAddBookmark,
-    RequestCancelBookmarkEditor,
-    RequestConfirmBookmarkEditor,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
@@ -15,7 +13,7 @@ from bookmark_manager.app.intents import (
     RequestToggleSelection,
     RequestToggleTagExpansion,
 )
-from bookmark_manager.ui.dialogs.bookmark_editor import BookmarkEditorDialog, BookmarkEditorState
+from bookmark_manager.ui.dialogs.bookmark_editor_presenter import BookmarkEditorPresenter
 from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
 
 if TYPE_CHECKING:
@@ -31,7 +29,6 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._dispatcher = dispatcher
         self._result_widgets = {}
-        self._selected_bookmark_id = None
         self.setWindowTitle("Bookmark Manager")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -45,6 +42,8 @@ class MainWindow(QMainWindow):
         self._results_layout = QVBoxLayout()
         self._results_container.setLayout(self._results_layout)
         self._layout.addWidget(self._results_container)
+        self._bookmark_editor_presenter = BookmarkEditorPresenter(self)
+        self._bookmark_editor_presenter.intent_emitted.connect(self._dispatch_and_render)
         self._build_actions()
         self._build_menus()
         self._build_shortcuts()
@@ -137,8 +136,7 @@ class MainWindow(QMainWindow):
             self._render_search_results(content_state.search_results)
         elif content_state.tag_view is not None:
             self._render_tag_view(content_state.tag_view)
-        if projection.bookmark_editor is not None:
-            self._show_bookmark_editor(projection)
+        self._bookmark_editor_presenter.render(projection.bookmark_editor)
 
     def _render_search_results(self, state: SearchResultsState) -> None:
         for row_state in state.row_states:
@@ -152,16 +150,3 @@ class MainWindow(QMainWindow):
             if section.is_expanded:
                 for row_state in section.row_states:
                     self._add_bookmark_row(row_state)
-
-    def _show_bookmark_editor(self, projection: MainWindowProjection) -> None:
-        editor = projection.bookmark_editor
-        if editor is None:
-            return
-        dialog = BookmarkEditorDialog(
-            self,
-            BookmarkEditorState(editor.url, editor.display_name, editor.tag_names, editor.initial_weight, editor.mode),
-        )
-        if dialog.exec() != BookmarkEditorDialog.DialogCode.Accepted:
-            self._dispatch_and_render(RequestCancelBookmarkEditor())
-            return
-        self._dispatch_and_render(RequestConfirmBookmarkEditor(dialog.url(), dialog.display_name(), tuple(dialog.tags()), dialog.initial_weight()))
