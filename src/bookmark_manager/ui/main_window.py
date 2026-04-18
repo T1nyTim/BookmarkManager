@@ -9,6 +9,7 @@ from bookmark_manager.app.intents import (
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
+    RequestEditSelectedBookmark,
     RequestSearchChanged,
     RequestToggleSelection,
     RequestToggleTagExpansion,
@@ -117,12 +118,7 @@ class MainWindow(QMainWindow):
         self._dispatch_and_render(RequestEditBookmark(bookmark_id))
 
     def _on_edit_selected_requested(self) -> None:
-        projection = self._dispatcher.dispatch(RequestSearchChanged(self._search_input.text()))
-        selected_bookmark_id = projection.selected_bookmark_id
-        if selected_bookmark_id is None:
-            self._render(projection)
-            return
-        self._render(self._dispatcher.dispatch(RequestEditBookmark(selected_bookmark_id)))
+        self._dispatch_and_render(RequestEditSelectedBookmark())
 
     def _on_search_text_changed(self, text: str) -> None:
         self._dispatch_and_render(RequestSearchChanged(text))

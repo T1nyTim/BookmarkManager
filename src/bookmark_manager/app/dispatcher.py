@@ -8,6 +8,7 @@ from bookmark_manager.app.intents import (
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
+    RequestEditSelectedBookmark,
     RequestSearchChanged,
     RequestToggleSelection,
     RequestToggleTagExpansion,
@@ -55,6 +56,8 @@ class AppDispatcher:
             self._handle_copy_selected_bookmark()
         elif isinstance(intent, RequestEditBookmark):
             self._state_store.open_edit_dialog(intent.bookmark_id)
+        elif isinstance(intent, RequestEditSelectedBookmark):
+            self._handle_edit_selected_bookmark()
         elif isinstance(intent, RequestSearchChanged):
             self._state_store.set_search_text(intent.query_text)
         elif isinstance(intent, RequestToggleSelection):
@@ -98,3 +101,9 @@ class AppDispatcher:
             self._state_store.clear_selection()
             return
         self._services.clipboard.copy(selected_bookmark_id, bookmark.url)
+
+    def _handle_edit_selected_bookmark(self) -> None:
+        selected_bookmark_id = self._state_store.state.selected_bookmark_id
+        if selected_bookmark_id is None:
+            return
+        self._state_store.open_edit_dialog(selected_bookmark_id)

@@ -7,6 +7,7 @@ type Intent = (
     | RequestCopyBookmark
     | RequestCopySelectedBookmark
     | RequestEditBookmark
+    | RequestEditSelectedBookmark
     | RequestSearchChanged
     | RequestToggleSelection
     | RequestToggleTagExpansion
@@ -45,6 +46,11 @@ class RequestCopySelectedBookmark:
 @dataclass(slots=True, frozen=True)
 class RequestEditBookmark:
     bookmark_id: int
+
+
+@dataclass(slots=True, frozen=True)
+class RequestEditSelectedBookmark:
+    pass
 
 
 @dataclass(slots=True, frozen=True)
