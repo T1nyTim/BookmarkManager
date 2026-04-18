@@ -21,6 +21,7 @@ class BookmarkEditorDialog(QDialog):
             state = BookmarkEditorState()
         self._state = state
         self.setWindowTitle("Edit URL" if state.mode == EditorMode.EDIT else "Add URL")
+        self.resize(700, self.sizeHint().height())
         self.setModal(True)
         root_layout = QVBoxLayout(self)
         form_layout = QFormLayout()
@@ -33,6 +34,7 @@ class BookmarkEditorDialog(QDialog):
         form_layout.addRow("Tags", self._tags_input)
         self._initial_weight_input = QSpinBox()
         self._initial_weight_input.setMinimum(0)
+        self._initial_weight_input.setMaximum(9999)
         self._initial_weight_input.setValue(state.initial_weight)
         form_layout.addRow("Initial Weight", self._initial_weight_input)
         help_row = QHBoxLayout()

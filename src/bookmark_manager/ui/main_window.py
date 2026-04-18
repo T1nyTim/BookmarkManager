@@ -61,7 +61,7 @@ class MainWindow(QMainWindow):
         self._result_widgets[row_state.bookmark_id] = widget
 
     def _build_actions(self) -> None:
-        self._add_bookmark_action = QAction("Add URL", self)
+        self._add_bookmark_action = QAction("New URL", self)
         self._add_bookmark_action.setShortcut(QKeySequence("Ctrl+N"))
         self._add_bookmark_action.triggered.connect(self._on_add_bookmark_requested)
         self._copy_bookmark_action = QAction("Copy URL", self)
