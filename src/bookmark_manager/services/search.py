@@ -47,6 +47,6 @@ class SearchService:
         bookmark_id_to_tag_names = {}
         for bookmark in bookmarks:
             tags = self._bookmark_tag_repo.get_tags_for_bookmark(bookmark.bookmark_id)
-            bookmark_id_to_tag_names[bookmark.bookmark_id] = tuple(tag.name_display for tag in tags)
+            bookmark_id_to_tag_names[bookmark.bookmark_id] = tuple(tag.name_normalized for tag in tags)
         ranked_bookmarks = tuple(rank_bookmarks(bookmarks, bookmark_id_to_tag_names, query))
         return SearchResult(ranked_bookmarks, bookmark_id_to_tag_names)
