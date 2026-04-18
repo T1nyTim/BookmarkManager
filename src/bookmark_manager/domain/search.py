@@ -99,7 +99,7 @@ def rank_bookmarks(
     for bookmark in bookmarks:
         tag_names = bookmark_id_to_tags.get(bookmark.bookmark_id, ())
         search_key = build_search_key(bookmark, tag_names, tag_tokens, general_tokens)
-        if tag_tokens and not general_tokens and search_key[0] == 1:
+        if search_key[1] == 0:
             continue
         ranked_bookmarks.append((search_key, bookmark))
     ranked_bookmarks.sort(key=lambda item: item[0])
