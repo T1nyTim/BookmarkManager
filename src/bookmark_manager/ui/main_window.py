@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QFrame, QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLineEdit, QMainWindow, QMenuBar, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from bookmark_manager.app.intents import (
     Intent,
@@ -73,7 +73,9 @@ class MainWindow(QMainWindow):
         self._exit_action.triggered.connect(self.close)
 
     def _build_menus(self) -> None:
-        menu_bar = self.menuBar()
+        menu_bar = QMenuBar(self)
+        menu_bar.setNativeMenuBar(False)
+        self.setMenuBar(menu_bar)
         file_menu = menu_bar.addMenu("File")
         file_menu.addAction(self._add_bookmark_action)
         file_menu.addSeparator()
