@@ -20,7 +20,7 @@ class BookmarkEditorDialog(QDialog):
         if state is None:
             state = BookmarkEditorState()
         self._state = state
-        self.setWindowTitle("Edit URL" if state.mode == EditorMode.EDIT else "Add URL")
+        self.setWindowTitle("Edit URL" if state.mode == EditorMode.EDIT else "New URL")
         self.resize(700, self.sizeHint().height())
         self.setModal(True)
         root_layout = QVBoxLayout(self)

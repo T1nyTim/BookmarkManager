@@ -135,7 +135,7 @@ class ProjectionBuilder:
                 "Display Name",
                 candidate.existing_display_name,
                 candidate.incoming_display_name,
-                candidate.existing_tag_names == candidate.incoming_display_name,
+                candidate.existing_display_name == candidate.incoming_display_name,
             ),
             DuplicateFieldProjection(
                 "Tags",

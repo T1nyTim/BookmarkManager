@@ -137,7 +137,13 @@ class DuplicateResolutionDialog(QDialog):
             QMessageBox.warning(self, self.windowTitle(), "At least one tag is required.")
             return
         self.intent_emitted.emit(
-            RequestResolveDuplicateBookmark(self._projection.bookmark_id, display_name, tuple(tags_text.strip()), int(initial_weight_text)),
+            RequestResolveDuplicateBookmark(
+                self._projection.bookmark_id,
+                self._projection.url,
+                display_name,
+                tuple(tags_text.split()),
+                int(initial_weight_text),
+            ),
         )
         self.accept()
 

@@ -148,6 +148,7 @@ class MainWindow(QMainWindow):
         elif content_state.tag_view is not None:
             self._render_tag_view(content_state.tag_view)
         self._bookmark_editor_presenter.render(projection.bookmark_editor)
+        self._render_duplicate_resolution(projection)
 
     def _render_duplicate_resolution(self, projection: MainWindowProjection) -> None:
         if projection.duplicate_resolution is None:
