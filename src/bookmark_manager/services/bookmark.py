@@ -74,6 +74,14 @@ class BookmarkService:
     def copy_bookmark(self, bookmark_id: int) -> None:
         self._bookmark_repo.increment_copy_count(bookmark_id)
 
+    def delete_bookmark(self, bookmark_id: int) -> None:
+        bookmark = self._bookmark_repo.get_by_id(bookmark_id)
+        if bookmark is None:
+            msg = "Bookmark not found"
+            raise ValueError(msg)
+        self._bookmark_tag_repo.unlink_all(bookmark_id)
+        self._bookmark_repo.delete(bookmark_id)
+
     def edit_bookmark(self, bookmark_id: int, url: str, display_name: str, tags: Sequence[str], initial_weight: int) -> None:
         bookmark = self._bookmark_repo.get_by_id(bookmark_id)
         if bookmark is None:

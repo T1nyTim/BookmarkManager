@@ -57,6 +57,7 @@ class MainWindowProjection:
 class MenuStateProjection:
     can_copy: bool
     can_edit: bool
+    can_delete: bool
 
 
 class ProjectionBuilder:
@@ -71,7 +72,7 @@ class ProjectionBuilder:
         tag_sections: tuple[TagSectionDomain, ...],
     ) -> MainWindowProjection:
         has_selection = state.selected_bookmark_id is not None
-        menu_state = MenuStateProjection(has_selection, has_selection)
+        menu_state = MenuStateProjection(has_selection, has_selection, has_selection)
         content_state = self._build_content_state(state, search_result, tag_sections)
         bookmark_editor = self._build_bookmark_editor(state, editable_bookmark)
         duplicate_resolution = self._build_duplicate_resolution(state.duplicate_candidate)

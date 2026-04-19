@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 class BookmarkRowWidget(QFrame):
     clicked = Signal(int)
     copy_requested = Signal(int)
+    delete_requested = Signal(int)
     edit_requested = Signal(int)
 
     def __init__(self, state: BookmarkRowState) -> None:
@@ -67,6 +68,9 @@ class BookmarkRowWidget(QFrame):
         edit_action = QAction("Edit URL", self)
         edit_action.triggered.connect(self._on_edit_clicked)
         menu.addAction(edit_action)
+        delete_action = QAction("Delete URL", self)
+        delete_action.triggered.connect(self._on_delete_clicked)
+        menu.addAction(delete_action)
         menu.exec_(event.globalPos())
 
     def mousePressEvent(self, event: QMouseEvent) -> None:  # noqa: N802
@@ -84,6 +88,9 @@ class BookmarkRowWidget(QFrame):
 
     def _on_copy_clicked(self) -> None:
         self.copy_requested.emit(self._state.bookmark_id)
+
+    def _on_delete_clicked(self) -> None:
+        self.delete_requested.emit(self._state.bookmark_id)
 
     def _on_edit_clicked(self) -> None:
         self.edit_requested.emit(self._state.bookmark_id)

@@ -9,6 +9,8 @@ from bookmark_manager.app.intents import (
     RequestConfirmBookmarkEditor,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
+    RequestDeleteBookmark,
+    RequestDeleteSelectedBookmark,
     RequestEditBookmark,
     RequestEditSelectedBookmark,
     RequestResolveDuplicateBookmark,
@@ -101,6 +103,20 @@ class AppDispatcher:
             self._state_store.clear_selection()
             return
         self._services.clipboard.copy(selected_bookmark_id, bookmark.url)
+
+    @_dispatch_intent.register
+    def _(self, intent: RequestDeleteBookmark) -> None:
+        self._services.bookmark.delete_bookmark(intent.bookmark_id)
+        if self._state_store.state.selected_bookmark_id == intent.bookmark_id:
+            self._state_store.clear_selection()
+
+    @_dispatch_intent.register
+    def _(self, _: RequestDeleteSelectedBookmark) -> None:
+        selected_bookmark_id = self._state_store.state.selected_bookmark_id
+        if selected_bookmark_id is None:
+            return
+        self._services.bookmark.delete_bookmark(selected_bookmark_id)
+        self._state_store.clear_selection()
 
     @_dispatch_intent.register
     def _(self, intent: RequestEditBookmark) -> None:

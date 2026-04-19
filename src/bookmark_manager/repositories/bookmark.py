@@ -22,6 +22,10 @@ class BookmarkRepository:
             raise RuntimeError(msg)
         return row_id
 
+    def delete(self, bookmark_id: int) -> None:
+        self._connection.execute("DELETE FROM bookmarks WHERE bookmark_id = ?", (bookmark_id,))
+        self._connection.commit()
+
     def get_by_id(self, bookmark_id: int) -> Bookmark | None:
         cursor = self._connection.execute(
             "SELECT bookmark_id, url, display_name, display_name_normalized, initial_weight, times_copied FROM bookmarks WHERE bookmark_id = ?",

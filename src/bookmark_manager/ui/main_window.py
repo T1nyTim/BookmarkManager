@@ -9,6 +9,8 @@ from bookmark_manager.app.intents import (
     RequestAddBookmark,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
+    RequestDeleteBookmark,
+    RequestDeleteSelectedBookmark,
     RequestEditBookmark,
     RequestEditSelectedBookmark,
     RequestSearchChanged,
@@ -63,6 +65,7 @@ class MainWindow(QMainWindow):
         widget.clicked.connect(self._on_bookmark_clicked)
         widget.copy_requested.connect(self._on_copy_bookmark_requested)
         widget.edit_requested.connect(self._on_edit_bookmark_requested)
+        widget.delete_requested.connect(self._on_delete_bookmark_requested)
         self._results_layout.addWidget(widget)
         self._result_widgets[row_state.bookmark_id] = widget
 
@@ -75,6 +78,8 @@ class MainWindow(QMainWindow):
         self._copy_bookmark_action.triggered.connect(self._on_copy_selected_requested)
         self._edit_bookmark_action = QAction("Edit URL", self)
         self._edit_bookmark_action.triggered.connect(self._on_edit_selected_requested)
+        self._delete_bookmark_action = QAction("Delete URL", self)
+        self._delete_bookmark_action.triggered.connect(self._on_delete_selected_requested)
         self._exit_action = QAction("Exit", self)
         self._exit_action.triggered.connect(self.close)
 
@@ -89,6 +94,8 @@ class MainWindow(QMainWindow):
         edit_menu = menu_bar.addMenu("Edit")
         edit_menu.addAction(self._copy_bookmark_action)
         edit_menu.addAction(self._edit_bookmark_action)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self._delete_bookmark_action)
 
     def _clear_results(self) -> None:
         self._result_widgets.clear()
@@ -108,6 +115,16 @@ class MainWindow(QMainWindow):
         dialog.intent_emitted.disconnect(self._dispatch_and_render)
         dialog.close()
         dialog.deleteLater()
+
+    def _confirm_delete(self) -> bool:
+        result = QMessageBox.question(
+            self,
+            self.windowTitle(),
+            "Delete the selected bookmark?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        return result == QMessageBox.StandardButton.Yes
 
     def _dispatch_and_render(self, intent: Intent) -> None:
         try:
@@ -129,6 +146,16 @@ class MainWindow(QMainWindow):
     def _on_copy_selected_requested(self) -> None:
         self._dispatch_and_render(RequestCopySelectedBookmark())
 
+    def _on_delete_bookmark_requested(self, bookmark_id: int) -> None:
+        if not self._confirm_delete():
+            return
+        self._dispatch_and_render(RequestDeleteBookmark(bookmark_id))
+
+    def _on_delete_selected_requested(self) -> None:
+        if not self._confirm_delete():
+            return
+        self._dispatch_and_render(RequestDeleteSelectedBookmark())
+
     def _on_edit_bookmark_requested(self, bookmark_id: int) -> None:
         self._dispatch_and_render(RequestEditBookmark(bookmark_id))
 
@@ -141,6 +168,7 @@ class MainWindow(QMainWindow):
     def _render(self, projection: MainWindowProjection) -> None:
         self._copy_bookmark_action.setEnabled(projection.menu_state.can_copy)
         self._edit_bookmark_action.setEnabled(projection.menu_state.can_edit)
+        self._delete_bookmark_action.setEnabled(projection.menu_state.can_delete)
         self._clear_results()
         content_state = projection.content_state
         if content_state.search_results is not None:
