@@ -16,6 +16,7 @@ from bookmark_manager.app.intents import (
     RequestToggleTagExpansion,
 )
 from bookmark_manager.ui.dialogs.bookmark_editor_presenter import BookmarkEditorPresenter
+from bookmark_manager.ui.dialogs.duplicate_resolution import DuplicateResolutionDialog
 from bookmark_manager.ui.widgets.bookmark_row import BookmarkRowWidget
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self._dispatcher = dispatcher
         self._result_widgets = {}
+        self._duplicate_dialog = None
         self.setWindowTitle("Bookmark Manager")
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -98,6 +100,15 @@ class MainWindow(QMainWindow):
             if widget is not None:
                 widget.deleteLater()
 
+    def _close_duplicate_dialog(self) -> None:
+        if self._duplicate_dialog is None:
+            return
+        dialog = self._duplicate_dialog
+        self._duplicate_dialog = None
+        dialog.intent_emitted.disconnect(self._dispatch_and_render)
+        dialog.close()
+        dialog.deleteLater()
+
     def _dispatch_and_render(self, intent: Intent) -> None:
         try:
             projection = self._dispatcher.dispatch(intent)
@@ -137,6 +148,22 @@ class MainWindow(QMainWindow):
         elif content_state.tag_view is not None:
             self._render_tag_view(content_state.tag_view)
         self._bookmark_editor_presenter.render(projection.bookmark_editor)
+
+    def _render_duplicate_resolution(self, projection: MainWindowProjection) -> None:
+        if projection.duplicate_resolution is None:
+            self._close_duplicate_dialog()
+            return
+        should_rebuild = True
+        if self._duplicate_dialog is not None:
+            current_projection = getattr(self._duplicate_dialog, "_projection", None)
+            should_rebuild = current_projection != projection.duplicate_resolution
+        if not should_rebuild:
+            return
+        self._close_duplicate_dialog()
+        dialog = DuplicateResolutionDialog(self, projection.duplicate_resolution)
+        dialog.intent_emitted.connect(self._dispatch_and_render)
+        self._duplicate_dialog = dialog
+        dialog.open()
 
     def _render_search_results(self, state: SearchResultsState) -> None:
         for row_state in state.row_states:

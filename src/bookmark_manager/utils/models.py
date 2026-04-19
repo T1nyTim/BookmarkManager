@@ -6,6 +6,11 @@ class EditorMode(Enum):
     ADD = auto()
 
 
+class Mergeability(IntEnum):
+    MERGEABLE = True
+    UNMERGEABLE = False
+
+
 class Selection(IntEnum):
     SELECTED = True
     NOT_SELECTED = False

@@ -5,20 +5,21 @@ from typing import TYPE_CHECKING
 from bookmark_manager.app.intents import (
     RequestAddBookmark,
     RequestCancelBookmarkEditor,
+    RequestCancelDuplicateResolution,
     RequestConfirmBookmarkEditor,
     RequestCopyBookmark,
     RequestCopySelectedBookmark,
     RequestEditBookmark,
     RequestEditSelectedBookmark,
+    RequestResolveDuplicateBookmark,
     RequestSearchChanged,
     RequestToggleSelection,
     RequestToggleTagExpansion,
 )
+from bookmark_manager.services.bookmark import DuplicateBookmarkError
 
 if TYPE_CHECKING:
-    from bookmark_manager.app.intents import (
-        Intent,
-    )
+    from bookmark_manager.app.intents import Intent
     from bookmark_manager.app.projections import MainWindowProjection, ProjectionBuilder
     from bookmark_manager.app.state_store import StateStore
     from bookmark_manager.services.bookmark import BookmarkService
@@ -60,14 +61,25 @@ class AppDispatcher:
         self._state_store.open_add_dialog()
 
     @_dispatch_intent.register
-    def _r(self, _: RequestCancelBookmarkEditor) -> None:
+    def _(self, _: RequestCancelBookmarkEditor) -> None:
         self._state_store.close_dialog()
+
+    @_dispatch_intent.register
+    def _(self, _: RequestCancelDuplicateResolution) -> None:
+        self._state_store.clear_duplicate_candidate()
 
     @_dispatch_intent.register
     def _(self, intent: RequestConfirmBookmarkEditor) -> None:
         editing_bookmark_id = self._state_store.state.editing_bookmark_id
         if editing_bookmark_id is None:
-            self._services.bookmark.add_bookmark(intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
+            try:
+                self._services.bookmark.add_bookmark(intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
+            except DuplicateBookmarkError as err:
+                if err.candidate.is_exact_duplicate():
+                    msg = "That bookmark already exists with the same display name, tags and initial weight."
+                    raise ValueError(msg) from err
+                self._state_store.open_duplicate_resolution(err.candidate)
+                return
         else:
             self._services.bookmark.edit_bookmark(editing_bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
         self._state_store.close_dialog()
@@ -100,6 +112,11 @@ class AppDispatcher:
         if selected_bookmark_id is None:
             return
         self._state_store.open_edit_dialog(selected_bookmark_id)
+
+    @_dispatch_intent.register
+    def _(self, intent: RequestResolveDuplicateBookmark) -> None:
+        self._services.bookmark.edit_bookmark(intent.bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
+        self._state_store.clear_duplicate_candidate()
 
     @_dispatch_intent.register
     def _(self, intent: RequestSearchChanged) -> None:

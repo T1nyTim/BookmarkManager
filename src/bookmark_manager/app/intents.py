@@ -3,11 +3,13 @@ from dataclasses import dataclass
 type Intent = (
     RequestAddBookmark
     | RequestCancelBookmarkEditor
+    | RequestCancelDuplicateResolution
     | RequestConfirmBookmarkEditor
     | RequestCopyBookmark
     | RequestCopySelectedBookmark
     | RequestEditBookmark
     | RequestEditSelectedBookmark
+    | RequestResolveDuplicateBookmark
     | RequestSearchChanged
     | RequestToggleSelection
     | RequestToggleTagExpansion
@@ -21,6 +23,11 @@ class RequestAddBookmark:
 
 @dataclass(slots=True, frozen=True)
 class RequestCancelBookmarkEditor:
+    pass
+
+
+@dataclass(slots=True, frozen=True)
+class RequestCancelDuplicateResolution:
     pass
 
 
@@ -50,6 +57,14 @@ class RequestEditBookmark:
 @dataclass(slots=True, frozen=True)
 class RequestEditSelectedBookmark:
     pass
+
+
+@dataclass(slots=True, frozen=True)
+class RequestResolveDuplicateBookmark:
+    bookmark_id: int
+    display_name: str
+    tag_names: tuple[str, ...]
+    initial_weight: int
 
 
 @dataclass(slots=True, frozen=True)

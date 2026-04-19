@@ -1,4 +1,8 @@
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from bookmark_manager.services.bookmark import DuplicateCandidate
 
 
 @dataclass(slots=True)
@@ -8,6 +12,7 @@ class AppState:
     is_add_dialog_open: bool = False
     editing_bookmark_id: int | None = None
     expanded_tag_ids: set[int] = field(default_factory=set)
+    duplicate_candidate: DuplicateCandidate | None = None
 
 
 class StateStore:
@@ -17,6 +22,9 @@ class StateStore:
     @property
     def state(self) -> AppState:
         return self._state
+
+    def clear_duplicate_candidate(self) -> None:
+        self._state.duplicate_candidate = None
 
     def clear_selection(self) -> None:
         self._state.selected_bookmark_id = None
@@ -28,10 +36,16 @@ class StateStore:
     def open_add_dialog(self) -> None:
         self._state.is_add_dialog_open = True
         self._state.editing_bookmark_id = None
+        self._state.duplicate_candidate = None
+
+    def open_duplicate_resolution(self, candidate: DuplicateCandidate) -> None:
+        self.close_dialog()
+        self._state.duplicate_candidate = candidate
 
     def open_edit_dialog(self, bookmark_id: int) -> None:
         self._state.is_add_dialog_open = False
         self._state.editing_bookmark_id = bookmark_id
+        self._state.duplicate_candidate = None
 
     def selected_bookmark_id(self) -> int | None:
         return self._state.selected_bookmark_id
