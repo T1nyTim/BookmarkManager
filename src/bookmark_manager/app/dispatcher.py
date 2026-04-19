@@ -78,6 +78,7 @@ class AppDispatcher:
                 self._services.bookmark.add_bookmark(intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
             except DuplicateBookmarkError as err:
                 if err.candidate.is_exact_duplicate():
+                    self._state_store.close_dialog()
                     msg = "That bookmark already exists with the same display name, tags and initial weight."
                     raise ValueError(msg) from err
                 self._state_store.open_duplicate_resolution(err.candidate)
