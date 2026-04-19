@@ -33,8 +33,13 @@ class DuplicateCandidate:
         return (
             self.existing_display_name == self.incoming_display_name
             and self.existing_initial_weight == self.incoming_initial_weight
-            and self._normalized_existing_tags() == self._normalized_incoming_tags()
+            and self._incoming_tags_are_already_present()
         )
+
+    def _incoming_tags_are_already_present(self) -> bool:
+        existing_tags = {normalize_tag(tag) for tag in self.existing_tag_names}
+        incoming_tags = {normalize_tag(tag) for tag in self.incoming_tag_names}
+        return incoming_tags.issubset(existing_tags)
 
     def _normalized_existing_tags(self) -> tuple[str, ...]:
         return tuple(sorted(normalize_tag(tag) for tag in self.existing_tag_names))
