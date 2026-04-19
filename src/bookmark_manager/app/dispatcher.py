@@ -81,7 +81,7 @@ class AppDispatcher:
                 self._state_store.open_duplicate_resolution(err.candidate)
                 return
         else:
-            self._services.bookmark.edit_bookmark(editing_bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
+            self._services.bookmark.edit_bookmark(editing_bookmark_id, intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
         self._state_store.close_dialog()
 
     @_dispatch_intent.register
@@ -115,7 +115,7 @@ class AppDispatcher:
 
     @_dispatch_intent.register
     def _(self, intent: RequestResolveDuplicateBookmark) -> None:
-        self._services.bookmark.edit_bookmark(intent.bookmark_id, intent.display_name, intent.tag_names, intent.initial_weight)
+        self._services.bookmark.edit_bookmark(intent.bookmark_id, intent.url, intent.display_name, intent.tag_names, intent.initial_weight)
         self._state_store.clear_duplicate_candidate()
 
     @_dispatch_intent.register

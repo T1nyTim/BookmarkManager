@@ -62,6 +62,7 @@ class RequestEditSelectedBookmark:
 @dataclass(slots=True, frozen=True)
 class RequestResolveDuplicateBookmark:
     bookmark_id: int
+    url: str
     display_name: str
     tag_names: tuple[str, ...]
     initial_weight: int

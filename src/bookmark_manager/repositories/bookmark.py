@@ -59,10 +59,10 @@ class BookmarkRepository:
         self._connection.execute(
             """
             UPDATE bookmarks
-            SET display_name = ?, display_name_normalized = ?, initial_weight = ?, updated_at = CURRENT_TIMESTAMP
+            SET url = ?, display_name = ?, display_name_normalized = ?, initial_weight = ?, updated_at = CURRENT_TIMESTAMP
             WHERE bookmark_id = ?
             """,
-            (bookmark.display_name, bookmark.display_name_normalized, bookmark.initial_weight, bookmark.bookmark_id),
+            (bookmark.url, bookmark.display_name, bookmark.display_name_normalized, bookmark.initial_weight, bookmark.bookmark_id),
         )
         self._connection.commit()
 

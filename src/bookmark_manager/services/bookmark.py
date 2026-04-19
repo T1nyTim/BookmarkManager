@@ -74,11 +74,27 @@ class BookmarkService:
     def copy_bookmark(self, bookmark_id: int) -> None:
         self._bookmark_repo.increment_copy_count(bookmark_id)
 
-    def edit_bookmark(self, bookmark_id: int, display_name: str, tags: Sequence[str], initial_weight: int) -> None:
+    def edit_bookmark(self, bookmark_id: int, url: str, display_name: str, tags: Sequence[str], initial_weight: int) -> None:
         bookmark = self._bookmark_repo.get_by_id(bookmark_id)
         if bookmark is None:
             msg = "Bookmark not found"
             raise ValueError(msg)
+        existing_with_url = self._bookmark_repo.get_by_url(url)
+        if existing_with_url is not None and existing_with_url.bookmark_id != bookmark_id:
+            existing_tags = self._bookmark_tag_repo.get_tags_for_bookmark(existing_with_url.bookmark_id)
+            raise DuplicateBookmarkError(
+                DuplicateCandidate(
+                    existing_with_url.bookmark_id,
+                    url,
+                    existing_with_url.display_name,
+                    tuple(tag.name_display for tag in existing_tags),
+                    existing_with_url.initial_weight,
+                    display_name,
+                    tuple(tags),
+                    initial_weight,
+                ),
+            )
+        bookmark.url = url
         bookmark.display_name = display_name
         bookmark.display_name_normalized = normalize_display_name(display_name)
         bookmark.initial_weight = initial_weight
