@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction, QKeySequence
-from PySide6.QtWidgets import QFrame, QLineEdit, QMainWindow, QMenuBar, QMessageBox, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QLineEdit, QMainWindow, QMenuBar, QMessageBox, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from bookmark_manager.app.intents import (
     Intent,
@@ -40,12 +40,16 @@ class MainWindow(QMainWindow):
         self._search_input.setPlaceholderText("Search...")
         self._search_input.textChanged.connect(self._on_search_text_changed)
         self._layout.addWidget(self._search_input)
+        self._results_scroll_area = QScrollArea()
+        self._results_scroll_area.setWidgetResizable(True)
+        self._results_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         self._results_container = QFrame()
         self._results_container.setFrameShape(QFrame.Shape.StyledPanel)
         self._results_layout = QVBoxLayout()
         self._results_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self._results_container.setLayout(self._results_layout)
-        self._layout.addWidget(self._results_container, 1)
+        self._results_scroll_area.setWidget(self._results_container)
+        self._layout.addWidget(self._results_scroll_area, 1)
         self._bookmark_editor_presenter = BookmarkEditorPresenter(self)
         self._bookmark_editor_presenter.intent_emitted.connect(self._dispatch_and_render)
         self._build_actions()
