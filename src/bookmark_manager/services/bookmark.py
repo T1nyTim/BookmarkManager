@@ -111,6 +111,7 @@ class BookmarkService:
                     initial_weight,
                 ),
             )
+        old_tags = self._bookmark_tag_repo.get_tags_for_bookmark(bookmark_id)
         bookmark.url = url
         bookmark.display_name = display_name
         bookmark.display_name_normalized = normalize_display_name(display_name)
@@ -118,6 +119,9 @@ class BookmarkService:
         self._bookmark_repo.update(bookmark)
         self._bookmark_tag_repo.unlink_all(bookmark_id)
         self._assign_tags(bookmark_id, tags)
+        for tag in old_tags:
+            if not self._bookmark_tag_repo.has_bookmarks_for_tag(tag.tag_id):
+                self._tag_repo.delete(tag.tag_id)
 
     def _assign_tags(self, bookmark_id: int, tags: Sequence[str]) -> None:
         for tag in tags:
