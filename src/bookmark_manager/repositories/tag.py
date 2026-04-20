@@ -10,6 +10,10 @@ class TagRepository:
     def __init__(self, connection: sqlite3.Connection) -> None:
         self._connection = connection
 
+    def delete(self, tag_id: int) -> None:
+        self._connection.execute("DELETE FROM tags WHERE tag_id = ?", (tag_id,))
+        self._connection.commit()
+
     def get_or_create(self, name_display: str, name_normalized: str) -> Tag:
         cursor = self._connection.execute("SELECT tag_id, name_display, name_normalized FROM tags WHERE name_normalized = ?", (name_normalized,))
         row = cursor.fetchone()

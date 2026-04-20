@@ -84,8 +84,12 @@ class BookmarkService:
         if bookmark is None:
             msg = "Bookmark not found"
             raise ValueError(msg)
+        tags = self._bookmark_tag_repo.get_tags_for_bookmark(bookmark_id)
         self._bookmark_tag_repo.unlink_all(bookmark_id)
         self._bookmark_repo.delete(bookmark_id)
+        for tag in tags:
+            if not self._bookmark_tag_repo.has_bookmarks_for_tag(tag.tag_id):
+                self._tag_repo.delete(tag.tag_id)
 
     def edit_bookmark(self, bookmark_id: int, url: str, display_name: str, tags: Sequence[str], initial_weight: int) -> None:
         bookmark = self._bookmark_repo.get_by_id(bookmark_id)

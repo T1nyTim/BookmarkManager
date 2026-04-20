@@ -40,6 +40,10 @@ class BookmarkTagRepository:
         )
         return [self._row_to_tag(row) for row in cursor.fetchall()]
 
+    def has_bookmarks_for_tag(self, tag_id: int) -> bool:
+        cursor = self._connection.execute("SELECT 1 FROM bookmark_tags WHERE tag_id = ? LIMIT 1", (tag_id,))
+        return cursor.fetchone() is not None
+
     def link(self, bookmark_id: int, tag_id: int) -> None:
         self._connection.execute("INSERT OR IGNORE INTO bookmark_tags (bookmark_id, tag_id) VALUES (?, ?)", (bookmark_id, tag_id))
         self._connection.commit()
