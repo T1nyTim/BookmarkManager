@@ -81,6 +81,7 @@ class AppDispatcher:
                     self._state_store.close_dialog()
                     msg = "That bookmark already exists with the same display name, tags and initial weight."
                     raise ValueError(msg) from err
+                self._state_store.close_dialog()
                 self._state_store.open_duplicate_resolution(err.candidate)
                 return
         else:
