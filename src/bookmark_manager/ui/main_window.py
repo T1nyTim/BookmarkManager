@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
             projection = self._dispatcher.dispatch(intent)
         except ValueError as err:
             QMessageBox.warning(self, self.windowTitle(), str(err))
-            return
+            projection = self._dispatcher.dispatch(RequestSearchChanged(self._search_input.text()))
         self._render(projection)
 
     def _on_add_bookmark_requested(self) -> None:
