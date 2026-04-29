@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 from bookmark_manager.domain.search import rank_bookmarks
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from bookmark_manager.domain.models import Bookmark
     from bookmark_manager.repositories.bookmark import BookmarkRepository
     from bookmark_manager.repositories.bookmark_tag import BookmarkTagRepository
@@ -43,12 +45,14 @@ class SearchService:
         )
 
     def search(self, query: str) -> SearchResult:
-        bookmarks = self._bookmark_repo.list_all()
-        bookmark_id_to_tag_names = {}
-        bookmark_id_to_normalized_tag_names = {}
-        for bookmark in bookmarks:
-            tags = self._bookmark_tag_repo.get_tags_for_bookmark(bookmark.bookmark_id)
-            bookmark_id_to_tag_names[bookmark.bookmark_id] = tuple(tag.name_display for tag in tags)
-            bookmark_id_to_normalized_tag_names[bookmark.bookmark_id] = tuple(tag.name_normalized for tag in tags)
+        bookmarks = tuple(self._bookmark_repo.list_all())
+        bookmark_ids = tuple(bookmark.bookmark_id for bookmark in bookmarks)
+        tags_by_bookmark_id = self._bookmark_tag_repo.get_tags_for_bookmarks(bookmark_ids)
+        bookmark_id_to_tag_names = {
+            bookmark.bookmark_id: tuple(tag.name_display for tag in tags_by_bookmark_id.get(bookmark.bookmark_id, ())) for bookmark in bookmarks
+        }
+        bookmark_id_to_normalized_tag_names: dict[int, Sequence[str]] = {
+            bookmark.bookmark_id: tuple(tag.name_normalized for tag in tags_by_bookmark_id.get(bookmark.bookmark_id, ())) for bookmark in bookmarks
+        }
         ranked_bookmarks = tuple(rank_bookmarks(bookmarks, bookmark_id_to_normalized_tag_names, query))
         return SearchResult(ranked_bookmarks, bookmark_id_to_tag_names)

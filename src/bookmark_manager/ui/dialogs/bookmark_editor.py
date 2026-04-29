@@ -34,7 +34,7 @@ class BookmarkEditorDialog(QDialog):
         form_layout.addRow("Tags", self._tags_input)
         self._initial_weight_input = QSpinBox()
         self._initial_weight_input.setMinimum(0)
-        self._initial_weight_input.setMaximum(9999)
+        self._initial_weight_input.setMaximum(99999)
         self._initial_weight_input.setValue(state.initial_weight)
         form_layout.addRow("Initial Weight", self._initial_weight_input)
         help_row = QHBoxLayout()

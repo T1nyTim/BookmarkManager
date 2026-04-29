@@ -1,3 +1,4 @@
+import json
 from typing import TYPE_CHECKING
 
 from bookmark_manager.domain.models import Bookmark, Tag
@@ -39,6 +40,26 @@ class BookmarkTagRepository:
             (bookmark_id,),
         )
         return [self._row_to_tag(row) for row in cursor.fetchall()]
+
+    def get_tags_for_bookmarks(self, bookmark_ids: tuple[int, ...]) -> dict[int, tuple[Tag, ...]]:
+        if not bookmark_ids:
+            return {}
+        cursor = self._connection.execute(
+            """
+            SELECT bookmark_tags.bookmark_id, tags.tag_id, tags.name_display, tags.name_normalized
+            FROM bookmark_tags
+            INNER JOIN tags ON tags.tag_id = bookmark_tags.tag_id
+            WHERE bookmark_tags.bookmark_id IN (
+                SELECT value FROM json_each(?)
+            )
+            """,
+            (json.dumps(bookmark_ids),),
+        )
+        tags_by_bookmark_id = {}
+        for row in cursor.fetchall():
+            bookmark_id = row["bookmark_id"]
+            tags_by_bookmark_id.setdefault(bookmark_id, []).append(self._row_to_tag(row))
+        return {bookmark_id: tuple(tags) for bookmark_id, tags in tags_by_bookmark_id.items()}
 
     def has_bookmarks_for_tag(self, tag_id: int) -> bool:
         cursor = self._connection.execute("SELECT 1 FROM bookmark_tags WHERE tag_id = ? LIMIT 1", (tag_id,))
