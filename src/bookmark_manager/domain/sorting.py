@@ -12,7 +12,7 @@ def bookmark_sort_key(bookmark: Bookmark) -> BookmarkSortKey:
     return (-bookmark.times_copied, -bookmark.initial_weight, bookmark.display_name_normalized, bookmark.bookmark_id)
 
 
-def compare_tags(tag_a: Tag, tag_b: Tag, sorted_bookmarks_by_tag_id: dict[int, Sequence[Bookmark]]) -> int:
+def compare_tags(tag_a: Tag, tag_b: Tag, sorted_bookmarks_by_tag_id: dict[int, tuple[Bookmark, ...]]) -> int:
     bookmarks_a = sorted_bookmarks_by_tag_id.get(tag_a.tag_id, ())
     bookmarks_b = sorted_bookmarks_by_tag_id.get(tag_b.tag_id, ())
     for a, b in zip(bookmarks_a, bookmarks_b, strict=False):

@@ -18,7 +18,7 @@ A local desktop bookmark manager built with Python and Qt
 ## Usage
 Run the application:
 ```
-python -m bookmark_manager
+uv run bookmark-manager
 ```
 
 ## Notes

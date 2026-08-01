@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from bookmark_manager.domain.models import Bookmark
     from bookmark_manager.services.bookmark import DuplicateCandidate
     from bookmark_manager.services.search import EditableBookmark, SearchResult
-    from bookmark_manager.services.tag_view import TagSectionDomain
+    from bookmark_manager.services.tag_view import TagViewResult
 
 
 @dataclass(slots=True, frozen=True)
@@ -64,19 +64,42 @@ class ProjectionBuilder:
     def __init__(self, shorten_url: Callable[[str], str]) -> None:
         self._shorten_url = shorten_url
 
-    def build_main_window(
-        self,
-        state: AppState,
-        search_result: SearchResult,
-        editable_bookmark: EditableBookmark | None,
-        tag_sections: tuple[TagSectionDomain, ...],
-    ) -> MainWindowProjection:
+    def build_main_window(self, state: AppState, content_state: ContentState, editable_bookmark: EditableBookmark | None) -> MainWindowProjection:
         has_selection = state.selected_bookmark_id is not None
         menu_state = MenuStateProjection(has_selection, has_selection, has_selection)
-        content_state = self._build_content_state(state, search_result, tag_sections)
         bookmark_editor = self._build_bookmark_editor(state, editable_bookmark)
         duplicate_resolution = self._build_duplicate_resolution(state.duplicate_candidate)
         return MainWindowProjection(menu_state, content_state, bookmark_editor, duplicate_resolution, state.selected_bookmark_id)
+
+    def build_search_content(self, state: AppState, search_result: SearchResult) -> ContentState:
+        search_results = SearchResultsState.from_domain(
+            state.search_text,
+            search_result.bookmarks,
+            self._shorten_url,
+            search_result.bookmark_id_to_tag_names,
+            state.selected_bookmark_id,
+        )
+        return ContentState(search_results, None)
+
+    def build_tag_content(self, state: AppState, tag_view: TagViewResult) -> ContentState:
+        sections = tuple(
+            TagSectionState(
+                section.tag_id,
+                section.tag_name,
+                section.tag_id in state.expanded_tag_ids,
+                tuple(
+                    search_result_row_from_bookmark(
+                        bookmark,
+                        self._shorten_url,
+                        tag_view.bookmark_id_to_tag_names.get(bookmark.bookmark_id, ()),
+                        state.selected_bookmark_id,
+                    )
+                    for bookmark in section.bookmarks
+                ),
+            )
+            for section in tag_view.sections
+        )
+        return ContentState(None, TagViewState(sections))
 
     def _build_bookmark_editor(self, state: AppState, editable_bookmark: EditableBookmark | None) -> BookmarkEditorProjection | None:
         if state.is_add_dialog_open:
@@ -90,41 +113,6 @@ class ProjectionBuilder:
                 editable_bookmark.initial_weight,
             )
         return None
-
-    def _build_content_state(self, state: AppState, search_result: SearchResult, tag_sections: tuple[TagSectionDomain, ...]) -> ContentState:
-        if state.search_text.strip():
-            return ContentState(
-                SearchResultsState.from_domain(
-                    state.search_text,
-                    search_result.bookmarks,
-                    self._shorten_url,
-                    search_result.bookmark_id_to_tag_names,
-                    state.selected_bookmark_id,
-                ),
-                None,
-            )
-        return ContentState(
-            None,
-            TagViewState(
-                tuple(
-                    TagSectionState(
-                        section.tag_id,
-                        section.tag_name,
-                        section.tag_id in state.expanded_tag_ids,
-                        tuple(
-                            search_result_row_from_bookmark(
-                                bookmark,
-                                self._shorten_url,
-                                search_result.bookmark_id_to_tag_names.get(bookmark.bookmark_id, ()),
-                                state.selected_bookmark_id,
-                            )
-                            for bookmark in section.bookmarks
-                        ),
-                    )
-                    for section in tag_sections
-                ),
-            ),
-        )
 
     def _build_duplicate_resolution(self, candidate: DuplicateCandidate | None) -> DuplicateResolutionProjection | None:
         if candidate is None:

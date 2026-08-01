@@ -15,10 +15,6 @@ class SearchResultsState:
     query_text: str
     row_states: tuple[BookmarkRowState, ...]
 
-    @property
-    def is_search_mode(self) -> bool:
-        return bool(self.query_text.strip())
-
     @classmethod
     def from_domain(
         cls,

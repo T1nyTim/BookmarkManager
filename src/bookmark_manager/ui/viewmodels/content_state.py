@@ -15,11 +15,3 @@ class TagViewState:
 class ContentState:
     search_results: SearchResultsState | None
     tag_view: TagViewState | None
-
-    @property
-    def is_search_mode(self) -> bool:
-        return self.search_results is not None
-
-    @property
-    def is_tag_mode(self) -> bool:
-        return self.tag_view is not None

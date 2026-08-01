@@ -41,12 +41,6 @@ class DuplicateCandidate:
         incoming_tags = {normalize_tag(tag) for tag in self.incoming_tag_names}
         return incoming_tags.issubset(existing_tags)
 
-    def _normalized_existing_tags(self) -> tuple[str, ...]:
-        return tuple(sorted(normalize_tag(tag) for tag in self.existing_tag_names))
-
-    def _normalized_incoming_tags(self) -> tuple[str, ...]:
-        return tuple(sorted(normalize_tag(tag) for tag in self.incoming_tag_names))
-
 
 class BookmarkService:
     def __init__(self, bookmark_repo: BookmarkRepository, tag_repo: TagRepository, bookmark_tag_repo: BookmarkTagRepository) -> None:

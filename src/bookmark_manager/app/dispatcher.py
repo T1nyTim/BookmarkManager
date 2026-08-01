@@ -155,6 +155,11 @@ class AppDispatcher:
             editable_bookmark = self._services.search.get_bookmark_for_edit(state.editing_bookmark_id)
             if editable_bookmark is None:
                 self._state_store.close_dialog()
-        search_result = self._services.search.search(state.search_text)
-        tag_sections = self._services.tag_view.get_tag_sections()
-        return self._projection_builder.build_main_window(self._state_store.state, search_result, editable_bookmark, tag_sections)
+        state = self._state_store.state
+        if state.search_text.strip():
+            search_result = self._services.search.search(state.search_text)
+            content_state = self._projection_builder.build_search_content(state, search_result)
+        else:
+            tag_view = self._services.tag_view.get_tag_view()
+            content_state = self._projection_builder.build_tag_content(state, tag_view)
+        return self._projection_builder.build_main_window(state, content_state, editable_bookmark)
